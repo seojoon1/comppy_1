@@ -1,13 +1,16 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import { BracketView } from "../bracket/BracketView";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "토너먼트 브라킷" },
+    {
+      name: "description",
+      content: "싱글 엘리미네이션 토너먼트 브라킷 매니저",
+    },
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return <BracketView />;
 }
