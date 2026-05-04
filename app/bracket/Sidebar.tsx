@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Bracket } from "./types";
 import { getChampion } from "./utils";
-
 type Props = {
   bracket: Bracket | null;
   pendingCount: number;

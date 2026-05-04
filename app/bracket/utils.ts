@@ -1,5 +1,42 @@
 import type { Bracket, Match, MatchSlot, Participant } from "./types";
 
+const STORAGE_KEY = "bracket-state-v1";
+
+type PersistedState = {
+  bracket: Bracket | null;
+  pendingCount: number;
+};
+
+export function loadPersistedState(): PersistedState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedState;
+    if (typeof parsed !== "object" || parsed === null) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function savePersistedState(state: PersistedState): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // ignore quota / serialization errors
+  }
+}
+export function reSetBracket(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore quota / serialization errors  
+  }
+}
+
 export function createParticipants(count: number): Participant[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `p-${i + 1}`,
@@ -133,6 +170,33 @@ export function renameParticipant(
     })),
   );
   return { participants, rounds };
+}
+
+export function swapRound0Slots(
+  b: Bracket,
+  from: { matchIndex: number; slotIndex: 0 | 1 },
+  to: { matchIndex: number; slotIndex: 0 | 1 },
+): Bracket {
+  if (b.rounds.length === 0) return b;
+  if (from.matchIndex === to.matchIndex && from.slotIndex === to.slotIndex) {
+    return b;
+  }
+  const rounds = cloneRounds(b.rounds);
+  const r0 = rounds[0];
+  const tmp = r0[from.matchIndex].slots[from.slotIndex];
+  r0[from.matchIndex].slots[from.slotIndex] =
+    r0[to.matchIndex].slots[to.slotIndex];
+  r0[to.matchIndex].slots[to.slotIndex] = tmp;
+
+  const affected = new Set([from.matchIndex, to.matchIndex]);
+  for (const idx of affected) {
+    const m = r0[idx];
+    const [a, bSlot] = m.slots;
+    if (a && !bSlot) m.winnerIndex = 0;
+    else if (!a && bSlot) m.winnerIndex = 1;
+    else m.winnerIndex = null;
+  }
+  return recompute({ ...b, rounds });
 }
 
 export function getChampion(b: Bracket): Participant | null {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MatchCard } from "./MatchCard";
+import { useEffect, useState } from "react";
+import { MatchCard, type SwapTarget } from "./MatchCard";
 import { Sidebar } from "./Sidebar";
 import { ResultsModal } from "./ResultsModal";
 import type { Bracket } from "./types";
@@ -8,14 +8,35 @@ import {
   buildResultsText,
   clearWinners,
   createParticipants,
+  loadPersistedState,
   renameParticipant,
+  savePersistedState,
   setWinner,
+  swapRound0Slots,
+  reSetBracket,
 } from "./utils";
 
 export function BracketView() {
   const [pendingCount, setPendingCount] = useState(8);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   const [resultsOpen, setResultsOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const saved = loadPersistedState();
+    if (saved) {
+      if (saved.bracket) setBracket(saved.bracket);
+      if (typeof saved.pendingCount === "number" && saved.pendingCount > 0) {
+        setPendingCount(saved.pendingCount);
+      }
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    savePersistedState({ bracket, pendingCount });
+  }, [hydrated, bracket, pendingCount]);
 
   const handleGenerate = () => {
     const n = Math.max(2, Math.min(128, pendingCount || 0));
@@ -23,12 +44,15 @@ export function BracketView() {
     setBracket(buildBracket(createParticipants(n)));
   };
 
-  const handleReset = () => {
-    if (!bracket) return;
-    setBracket(clearWinners(bracket));
+  const handleReset = () => { //브라켓 초기화 함수 
+    // console.log('resetting bracket...');
+    reSetBracket(); //로컬 스토리지에서 브라켓 상태 제거
+    setBracket(null);
+    setPendingCount(8);
   };
 
   const handleRename = (id: string, name: string) => {
+
     if (!bracket) return;
     setBracket(renameParticipant(bracket, id, name));
   };
@@ -40,6 +64,11 @@ export function BracketView() {
   ) => {
     if (!bracket) return;
     setBracket(setWinner(bracket, round, matchIndex, slotIndex));
+  };
+
+  const handleSwap = (from: SwapTarget, to: SwapTarget) => {
+    if (!bracket) return;
+    setBracket(swapRound0Slots(bracket, from, to));
   };
 
   return (
@@ -58,6 +87,7 @@ export function BracketView() {
           <BracketCanvas
             bracket={bracket}
             onPickWinner={handlePickWinner}
+            onSwap={handleSwap}
           />
         ) : (
           <EmptyState />
@@ -98,13 +128,12 @@ type CanvasProps = {
     matchIndex: number,
     slotIndex: 0 | 1,
   ) => void;
+  onSwap: (from: SwapTarget, to: SwapTarget) => void;
 };
 
-function BracketCanvas({ bracket, onPickWinner }: CanvasProps) {
+function BracketCanvas({ bracket, onPickWinner, onSwap }: CanvasProps) {
   const totalRounds = bracket.rounds.length;
   const firstRoundCount = bracket.rounds[0].length;
-  // Each match needs ~88px of vertical space minimum; the column height is
-  // shared across rounds so flex's justify-around does the alignment work.
   const minHeight = Math.max(firstRoundCount * 96, 480);
 
   return (
@@ -123,6 +152,7 @@ function BracketCanvas({ bracket, onPickWinner }: CanvasProps) {
               match={match}
               totalRounds={totalRounds}
               onPickWinner={onPickWinner}
+              onSwap={onSwap}
             />
           ))}
         </div>

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { Match, MatchSlot } from "./types";
 
-export type DragData = {
-  round: number;
+export type SwapTarget = {
   matchIndex: number;
   slotIndex: 0 | 1;
 };
@@ -15,11 +14,12 @@ type Props = {
     matchIndex: number,
     slotIndex: 0 | 1,
   ) => void;
+  onSwap: (from: SwapTarget, to: SwapTarget) => void;
 };
 
 const DRAG_MIME = "application/x-bracket-slot";
 
-export function MatchCard({ match, totalRounds, onPickWinner }: Props) {
+export function MatchCard({ match, totalRounds, onPickWinner, onSwap }: Props) {
   const [hoverSlot, setHoverSlot] = useState<0 | 1 | null>(null);
 
   const isFinal = match.round === totalRounds - 1;
@@ -53,6 +53,7 @@ export function MatchCard({ match, totalRounds, onPickWinner }: Props) {
             isDropHover={hoverSlot === idx}
             onPick={() => onPickWinner(match.round, match.matchIndex, idx)}
             onDragHover={(active) => setHoverSlot(active ? idx : null)}
+            onSwap={onSwap}
           />
         );
       })}
@@ -69,6 +70,12 @@ type SlotRowProps = {
   isDropHover: boolean;
   onPick: () => void;
   onDragHover: (active: boolean) => void;
+  onSwap: (from: SwapTarget, to: SwapTarget) => void;
+};
+
+type DragPayload = {
+  matchIndex: number;
+  slotIndex: 0 | 1;
 };
 
 function SlotRow({
@@ -80,21 +87,23 @@ function SlotRow({
   isDropHover,
   onPick,
   onDragHover,
+  onSwap,
 }: SlotRowProps) {
-  const draggable = !!slot;
+  const isRound0 = match.round === 0;
+  const draggable = isRound0 && !!slot;
 
   const handleDragStart = (e: React.DragEvent) => {
-    if (!slot) return;
-    const data: DragData = {
-      round: match.round,
+    if (!draggable) return;
+    const payload: DragPayload = {
       matchIndex: match.matchIndex,
       slotIndex,
     };
-    e.dataTransfer.setData(DRAG_MIME, JSON.stringify(data));
+    e.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (!isRound0) return;
     if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -106,23 +115,21 @@ function SlotRow({
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (!isRound0) return;
     e.preventDefault();
     onDragHover(false);
     const raw = e.dataTransfer.getData(DRAG_MIME);
     if (!raw) return;
-    let data: DragData;
+    let payload: DragPayload;
     try {
-      data = JSON.parse(raw) as DragData;
+      payload = JSON.parse(raw) as DragPayload;
     } catch {
       return;
     }
-    // Valid drop: source must be a feeder of THIS slot
-    // i.e. source round = match.round - 1, source matchIndex = match.matchIndex * 2 + slotIndex
-    const expectedSrcRound = match.round - 1;
-    const expectedSrcIdx = match.matchIndex * 2 + slotIndex;
-    if (data.round !== expectedSrcRound) return;
-    if (data.matchIndex !== expectedSrcIdx) return;
-    onPick();
+    onSwap(
+      { matchIndex: payload.matchIndex, slotIndex: payload.slotIndex },
+      { matchIndex: match.matchIndex, slotIndex },
+    );
   };
 
   const base =
@@ -135,7 +142,11 @@ function SlotRow({
   const dropClass = isDropHover
     ? "ring-2 ring-inset ring-amber-400 bg-amber-400/10"
     : "";
-  const cursorClass = slot ? "cursor-pointer" : "cursor-default";
+  const cursorClass = slot
+    ? draggable
+      ? "cursor-grab active:cursor-grabbing"
+      : "cursor-pointer"
+    : "cursor-default";
 
   return (
     <div
