@@ -17,19 +17,6 @@ export function ResultsModal({ text, onClose }: Props) {
       // ignore
     }
   };
-
-  const handleDownload = () => {
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `tournament-results-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
@@ -62,13 +49,6 @@ export function ResultsModal({ text, onClose }: Props) {
             className="rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-700"
           >
             {copied ? "복사됨!" : "복사"}
-          </button>
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500"
-          >
-            .txt 다운로드
           </button>
         </div>
       </div>
