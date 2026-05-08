@@ -108,12 +108,12 @@ function EmptyState() {
     <div className="flex h-full flex-col items-center justify-center text-center">
       <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/40 px-12 py-16">
         <div className="text-2xl font-semibold text-gray-300">
-          브라킷이 없습니다
+          대진이 없습니다
         </div>
         <p className="mt-2 max-w-md text-sm text-gray-500">
           좌측 사이드바에서 총 인원수를 입력하고
           <br />
-          <span className="text-emerald-400">브라킷 생성</span> 버튼을
+          <span className="text-emerald-400">토너먼트 생성</span> 버튼을
           눌러주세요.
         </p>
       </div>

@@ -21,6 +21,7 @@ export function Sidebar({
   onShowResults,
 }: Props) {
   const [namesOpen, setNamesOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
   const champion = bracket ? getChampion(bracket) : null;
   const hasBracket = !!bracket && bracket.rounds.length > 0;
@@ -29,10 +30,10 @@ export function Sidebar({
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-gray-800 bg-gray-950">
       <div className="border-b border-gray-800 px-5 py-4">
         <h1 className="text-lg font-semibold text-gray-100">
-          토너먼트 브라킷
+          토너먼트 생성기
         </h1>
         <p className="mt-1 text-xs text-gray-500">
-          싱글 엘리미네이션 방식의 토너먼트 브라킷 생성기입니다.
+          싱글 엘리미네이션 방식의 토너먼트 생성기입니다.
         </p>
       </div>
 
@@ -56,12 +57,21 @@ export function Sidebar({
               onClick={onGenerate}
               className="flex-1 rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 active:bg-emerald-700"
             >
-              브라킷 생성
+              토너먼트 생성
             </button>
           </div>
           <p className="mt-2 text-[11px] text-gray-500">
             2의 거듭제곱이 아니면 부전승으로 자동 채워집니다.
           </p>
+        </Section>
+        <Section title ="토너먼트 방식">
+            <button
+              type="button"
+              onClick={() => alert("현재는 싱글 엘리미네이션 방식만 지원됩니다.")}
+              className="flex-1 rounded bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 active:bg-emerald-700"
+            >
+              토너먼트 방식 변경
+            </button>
         </Section>
 
         <Section title="유틸리티">
