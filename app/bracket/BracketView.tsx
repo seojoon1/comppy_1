@@ -14,6 +14,7 @@ import {
   setWinner,
   swapRound0Slots,
   reSetBracket,
+  shuffleParticipants,
 } from "./utils";
 
 export function BracketView() {
@@ -51,6 +52,11 @@ export function BracketView() {
     setPendingCount(8);
   };
 
+  const handleShuffle = () => {
+    if (!bracket) return;
+    setBracket(shuffleParticipants(bracket));
+  };
+
   const handleRename = (id: string, name: string) => {
 
     if (!bracket) return;
@@ -80,6 +86,7 @@ export function BracketView() {
         onGenerate={handleGenerate}
         onReset={handleReset}
         onRenameParticipant={handleRename}
+        onShuffle={handleShuffle}
         onShowResults={() => setResultsOpen(true)}
       />
       <main className="flex-1 overflow-auto p-8">

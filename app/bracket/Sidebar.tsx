@@ -8,6 +8,7 @@ type Props = {
   onGenerate: () => void;
   onReset: () => void;
   onRenameParticipant: (id: string, name: string) => void;
+  onShuffle: () => void;
   onShowResults: () => void;
 };
 
@@ -18,6 +19,7 @@ export function Sidebar({
   onGenerate,
   onReset,
   onRenameParticipant,
+  onShuffle,
   onShowResults,
 }: Props) {
   const [namesOpen, setNamesOpen] = useState(false);
@@ -97,6 +99,11 @@ export function Sidebar({
 
         {hasBracket && bracket && (
           <Section title="참가자 명단">
+            <button type="button"
+            className="mb-2 w-50px rounded-full bg-gray-800/60 px-2 py-2 text-xs text-gray-400 hover:bg-gray-800/80"
+            onClick={onShuffle}>
+              셔플
+            </button>
             <button
               type="button"
               onClick={() => setNamesOpen((v) => !v)}

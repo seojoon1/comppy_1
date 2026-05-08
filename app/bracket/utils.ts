@@ -199,6 +199,11 @@ export function swapRound0Slots(
   return recompute({ ...b, rounds });
 }
 
+export function shuffleParticipants(b: Bracket): Bracket {
+  const shuffled = [...b.participants].sort(() => Math.random() - 0.5);
+  return buildBracket(shuffled);
+}
+
 export function getChampion(b: Bracket): Participant | null {
   if (b.rounds.length === 0) return null;
   const finalMatch = b.rounds[b.rounds.length - 1][0];
